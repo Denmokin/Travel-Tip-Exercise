@@ -223,7 +223,7 @@ function getFilterByFromQueryParams() {
     const queryParams = new URLSearchParams(window.location.search)
     const txt = queryParams.get('txt') || ''
     const minRate = queryParams.get('minRate') || 0
-    locService.setFilterBy({txt, minRate})
+    locService.setFilterBy({ txt, minRate })
 
     document.querySelector('input[name="filter-by-txt"]').value = txt
     document.querySelector('input[name="filter-by-rate"]').value = minRate
@@ -248,7 +248,7 @@ function onSetSortBy() {
     // const sortBy = {
     //     [prop] : (isDesc)? -1 : 1
     // }
-
+    
     locService.setSortBy(sortBy)
     loadAndRenderLocs()
 }
