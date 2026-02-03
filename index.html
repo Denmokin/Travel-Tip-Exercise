@@ -17,7 +17,7 @@
                 <h4 class="loc-address"></h4>
                 <p class="loc-distance"></p>
             </div>
-            
+
             <button onclick="app.onCopyLoc()">Copy location</button>
             <button onclick="app.onShareLoc()">Share location</button>
             <input name="loc-copier" />
@@ -76,7 +76,20 @@
                 </section>
             </section>
         </div>
+
     </main>
+
+    <dialog class="rate-modal">
+        <form method="dialog" class="rate-modal-form">
+            <h4 class="rate-modal-title">Title</h4>
+            <input type="text" name="rate" id="rate"></input>
+            <button class="rate-update-button">Save</button>
+        </form>
+
+    </dialog>
+
+
+
     <pre class="debug" hidden></pre>
     <div class="user-msg"></div>
     <script type="module" src="js/app.controller.js"></script>

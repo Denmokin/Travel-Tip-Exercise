@@ -8,7 +8,6 @@ export const mapService = {
     addClickListener
 }
 
-
 const API_KEYS = {
     key1: 'AIzaSyCbjfmmJ1xu1X1KSEhtGTDVIb8xBkdFBPg',
     key2: 'AIzaSyAEL_EzYbILuRGwnPAKZ8WeUiJhBFg7VJU',
