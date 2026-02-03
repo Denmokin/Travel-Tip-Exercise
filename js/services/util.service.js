@@ -95,9 +95,10 @@ function getColors() {
 }
 
 function getDistance(latLng1, latLng2, unit) {
+    
     if ((latLng1.lat == latLng2.lat) && (latLng1.lng == latLng2.lng)) {
         return 0
-    }
+    } 
     else {
         var radlat1 = Math.PI * latLng1.lat / 180
         var radlat2 = Math.PI * latLng2.lat / 180
