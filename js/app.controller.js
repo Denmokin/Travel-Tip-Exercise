@@ -16,9 +16,19 @@ window.app = {
     onShareLoc,
     onSetSortBy,
     onSetFilterBy,
+    onOpenModal,
+    onUpdateModal,
+    onCloseModal,
 }
 
 var gUserPos = null
+
+function onOpenModal(mClass, func) {
+    const elModal = document.querySelector(`.${mClass}`)
+    const elModalForm = document.querySelector(`.rate-modal-form`)
+    elModalForm.onsubmit = func
+    elModal.showModal()
+}
 
 function onInit() {
     getFilterByFromQueryParams()
@@ -39,7 +49,7 @@ function renderLocs(locs) {
 
     var strHTML = locs.map(loc => {
         const className = (loc.id === selectedLocId) ? 'active' : ''
-        
+
         const distanceStr = gUserPos
             ? `Distance: ${utilService.getDistance(
                 gUserPos,
@@ -63,7 +73,7 @@ function renderLocs(locs) {
             </p>
             <div class="loc-btns">     
                <button title="Delete" onclick="app.onRemoveLoc('${loc.id}')">🗑️</button>
-               <button title="Edit" onclick="app.onUpdateLoc('${loc.id}')">✏️</button>
+               <button title="Edit" onclick="app.onUpdateModal('${loc.id}')">✏️</button>
                <button title="Select" onclick="app.onSelectLoc('${loc.id}')">🗺️</button>
             </div>     
         </li>`}).join('')
@@ -154,24 +164,65 @@ function onPanToUserPos() {
         })
 }
 
-function onUpdateLoc(locId) {
+
+
+function onUpdateLoc(ev, locId) {
+    ev.preventDefault()
+
+    const form = ev.currentTarget
+    const formData = new FormData(form)
+    const rate = formData.get('rate')
+
     locService.getById(locId)
         .then(loc => {
-            const rate = +prompt('New rate?', loc.rate)
             if (rate && rate !== loc.rate) {
                 loc.rate = rate
-                locService.save(loc)
-                    .then(savedLoc => {
-                        flashMsg(`Rate was set to: ${savedLoc.rate}`)
-                        loadAndRenderLocs()
-                    })
-                    .catch(err => {
-                        console.error('OOPs:', err)
-                        flashMsg('Cannot update location')
-                    })
-
+                return locService.save(loc)
             }
         })
+        .then(savedLoc => {
+            if (savedLoc) {
+                flashMsg(`Rate was set to: ${savedLoc.rate}`)
+                loadAndRenderLocs()
+                onCloseModal()
+            }
+        })
+        .catch(err => {
+            console.error('OOPs:', err)
+            flashMsg('Cannot update location')
+        })
+}
+
+function onUpdateModal(locId) {
+    const elModal = document.querySelector('.rate-modal')
+    const elModalForm = document.querySelector('.rate-modal-form')
+    const elModalTitle = document.querySelector('.rate-modal-title')
+    const elModalInput = document.getElementById('rate')
+
+    locService.getById(locId)
+        .then(loc => {
+            elModalInput.value = loc.rate
+            elModalInput.placeholder = loc.rate
+            elModalTitle.innerText = loc.name
+
+            elModalForm.onsubmit = (event) => onUpdateLoc(event, locId)
+            elModal.showModal()
+        })
+}
+
+function onCloseModal() {
+    const dialog = document.querySelector('.rate-modal')
+    dialog.close()
+}
+
+function _onUpdate(ev) {
+    ev.preventDefault()
+    const form = ev.target
+    const formData = new FormData(form)
+    const question = formData.get('rate')
+    const elAnsContent = document.querySelector('.ans-content')
+    if (isQuestion(question)) onGetAnswer()
+    else elAnsContent.innerHTML = `<p>Its not a Question</p>`
 }
 
 function onSelectLoc(locId) {
@@ -191,12 +242,12 @@ function displayLoc(loc) {
     mapService.setMarker(loc)
 
     const distanceStr = gUserPos
-            ? `Distance: ${utilService.getDistance(
-                gUserPos,
-                { lat: loc.geo.lat, lng: loc.geo.lng },
-                'K'
-            )} km`
-            : 'Distance: —'
+        ? `Distance: ${utilService.getDistance(
+            gUserPos,
+            { lat: loc.geo.lat, lng: loc.geo.lng },
+            'K'
+        )} km`
+        : 'Distance: —'
 
     const el = document.querySelector('.selected-loc')
     el.querySelector('.loc-name').innerText = loc.name
@@ -273,7 +324,7 @@ function onSetSortBy() {
     // const sortBy = {
     //     [prop] : (isDesc)? -1 : 1
     // }
-    
+
     locService.setSortBy(sortBy)
     loadAndRenderLocs()
 }
