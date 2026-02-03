@@ -288,6 +288,10 @@ function renderLocStats() {
     locService.getLocCountByRateMap().then(stats => {
         handleStats(stats, 'loc-stats-rate')
     })
+
+    locService.getLocCountByUpdateMap().then(stats =>{
+        handleStats(stats, 'loc-stats-updated')
+    })
 }
 
 function handleStats(stats, selector) {
