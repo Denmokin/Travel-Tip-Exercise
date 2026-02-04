@@ -15,7 +15,7 @@ const API_KEYS = {
 }
 
 // TODO: Enter your API Key
-const API_KEY = API_KEYS.key1
+const API_KEY = API_KEYS.key2
 var gMap
 var gMarker
 

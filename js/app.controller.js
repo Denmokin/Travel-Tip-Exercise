@@ -16,19 +16,14 @@ window.app = {
     onShareLoc,
     onSetSortBy,
     onSetFilterBy,
-    onOpenModal,
     onUpdateModal,
     onCloseModal,
+    onAddModal,
+    onAddLoc,
 }
 
 var gUserPos = null
 
-function onOpenModal(mClass, func) {
-    const elModal = document.querySelector(`.${mClass}`)
-    const elModalForm = document.querySelector(`.rate-modal-form`)
-    elModalForm.onsubmit = func
-    elModal.showModal()
-}
 
 function onInit() {
     getFilterByFromQueryParams()
@@ -36,12 +31,19 @@ function onInit() {
     mapService.initMap()
         .then(() => {
             // onPanToTokyo()
-            mapService.addClickListener(onAddLoc)
+            mapService.addClickListener(onAddModal)
         })
         .catch(err => {
             console.error('OOPs:', err)
             flashMsg('Cannot init map')
         })
+
+    // close modal 
+    const closeBtn = document.querySelector('.modal__close-btn')
+    const modal = document.querySelector('.modal')
+    closeBtn.addEventListener('click', () => {
+        modal.close()
+    })
 }
 
 function renderLocs(locs) {
@@ -61,7 +63,7 @@ function renderLocs(locs) {
         return `
         <li class="loc ${className}" data-id="${loc.id}">
             <h4>  
-                <span>${loc.name}</span>
+            <span>${loc.name}</span>
                 <span>${distanceStr}</span>
                 <span title="${loc.rate} stars">${'★'.repeat(loc.rate)}</span>
             </h4>
@@ -70,9 +72,9 @@ function renderLocs(locs) {
                 ${(loc.createdAt !== loc.updatedAt) ?
                 ` | Updated: ${utilService.elapsedTime(loc.updatedAt)}`
                 : ''}
-            </p>
+                </p>
             <div class="loc-btns">     
-               <button title="Delete" onclick="app.onRemoveLoc('${loc.id}')">🗑️</button>
+            <button title="Delete" onclick="app.onRemoveLoc('${loc.id}')">🗑️</button>
                <button title="Edit" onclick="app.onUpdateModal('${loc.id}')">✏️</button>
                <button title="Select" onclick="app.onSelectLoc('${loc.id}')">🗺️</button>
             </div>     
@@ -89,6 +91,7 @@ function renderLocs(locs) {
     }
     document.querySelector('.debug').innerText = JSON.stringify(locs, null, 2)
 }
+
 
 function onRemoveLoc(locId) {
     if (!confirm('Are you sure you want to remove this location?')) return
@@ -118,26 +121,39 @@ function onSearchAddress(ev) {
         })
 }
 
-function onAddLoc(geo) {
-    const locName = prompt('Loc name', geo.address || 'Just a place')
+function onAddLoc(ev, geo) {
+    console.log('geo: ', geo)
+    console.log('gg')
+    ev.preventDefault()
+
+    const form = ev.currentTarget
+    const formData = new FormData(form)
+    const name = formData.get('place-name')
+    const rate = formData.get('rate')
+
+    const locName = name
     if (!locName) return
 
     const loc = {
         name: locName,
-        rate: +prompt(`Rate (1-5)`, '3'),
+        rate: rate,
         geo
     }
+
     locService.save(loc)
         .then((savedLoc) => {
             flashMsg(`Added Location (id: ${savedLoc.id})`)
             utilService.updateQueryParams({ locId: savedLoc.id })
             loadAndRenderLocs()
+            onCloseModal()
         })
         .catch(err => {
             console.error('OOPs:', err)
             flashMsg('Cannot add location')
         })
 }
+
+
 
 function loadAndRenderLocs() {
     locService.query()
@@ -167,6 +183,7 @@ function onPanToUserPos() {
 
 
 function onUpdateLoc(ev, locId) {
+
     ev.preventDefault()
 
     const form = ev.currentTarget
@@ -193,10 +210,19 @@ function onUpdateLoc(ev, locId) {
         })
 }
 
+
 function onUpdateModal(locId) {
-    const elModal = document.querySelector('.rate-modal')
-    const elModalForm = document.querySelector('.rate-modal-form')
-    const elModalTitle = document.querySelector('.rate-modal-title')
+
+    const elModalDiv = document.querySelector('.modal > div')
+    const elModal = document.querySelector('.modal')
+    const strFORM = `<form onsubmit="app.onUpdateLoc(event,'${locId}')" method="dialog" class="rate-form">
+                    <h4 class="rate-form__title">Title</h4>
+                    <input type="text" name="rate" id="rate"></input>
+                    <button class="rate-form__button">Save</button>
+                     </form>`
+    elModalDiv.innerHTML = strFORM
+
+    const elModalTitle = document.querySelector('.rate-form__title')
     const elModalInput = document.getElementById('rate')
 
     locService.getById(locId)
@@ -204,26 +230,38 @@ function onUpdateModal(locId) {
             elModalInput.value = loc.rate
             elModalInput.placeholder = loc.rate
             elModalTitle.innerText = loc.name
-
-            elModalForm.onsubmit = (event) => onUpdateLoc(event, locId)
             elModal.showModal()
         })
 }
 
+
+
+function onAddModal(geo) {
+    console.log('geo: ', geo)
+
+    const elModalDiv = document.querySelector('.modal > div')
+    const elModal = document.querySelector('.modal')
+    const strFORM = `<form method="dialog" class="add-form">
+                    <h4 class="add-form__title">Add Location</h4>
+                    <label for="place-name">Place Name</label>
+                    <input placeholder="Enter Place Name" type="text" name="place-name" id="place-name" required></input>
+                    <label for="rate">Rating</label>
+                    <input placeholder="Add Rating" type="text" name="rate" id="rate" required></input>
+                    <button class="add-form__button">Save</button>
+                     </form>`
+    elModalDiv.innerHTML = strFORM
+    const elModalForm = document.querySelector('.add-form')
+    elModalForm.onsubmit = (event) => app.onAddLoc(event, geo)
+    elModal.showModal()
+}
+
+
 function onCloseModal() {
-    const dialog = document.querySelector('.rate-modal')
+    const dialog = document.querySelector('.modal')
     dialog.close()
 }
 
-function _onUpdate(ev) {
-    ev.preventDefault()
-    const form = ev.target
-    const formData = new FormData(form)
-    const question = formData.get('rate')
-    const elAnsContent = document.querySelector('.ans-content')
-    if (isQuestion(question)) onGetAnswer()
-    else elAnsContent.innerHTML = `<p>Its not a Question</p>`
-}
+
 
 function onSelectLoc(locId) {
     return locService.getById(locId)
@@ -340,7 +378,7 @@ function renderLocStats() {
         handleStats(stats, 'loc-stats-rate')
     })
 
-    locService.getLocCountByUpdateMap().then(stats =>{
+    locService.getLocCountByUpdateMap().then(stats => {
         handleStats(stats, 'loc-stats-updated')
     })
 }

@@ -1,4 +1,8 @@
-.rate-modal {
+.modal {
+
+    color: var(--color1);
+
+
     background-color: var(--bg1);
     padding: 2rem 5rem;
 
@@ -14,4 +18,10 @@
         align-items: center;
         gap: 1rem;
     }
+
+    >button {
+        position: absolute;
+        top: 0;
+        right: 0;
+    } 
 }
