@@ -217,6 +217,7 @@ function onUpdateModal(locId) {
     const elModal = document.querySelector('.modal')
     const strFORM = `<form onsubmit="app.onUpdateLoc(event,'${locId}')" method="dialog" class="rate-form">
                     <h4 class="rate-form__title">Title</h4>
+                    <label for="rate">Rating</label>
                     <input type="text" name="rate" id="rate"></input>
                     <button class="rate-form__button">Save</button>
                      </form>`
